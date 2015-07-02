@@ -1,0 +1,28 @@
+.flex-box(){
+	display: -webkit-box;
+  	display: -moz-box;
+  	display: -ms-flexbox;
+  	display: -webkit-flex;
+  	display: flex;
+}
+
+.flex(@values){
+	-webkit-box-flex: @values;
+	-moz-box-flex:  @values;
+	-webkit-flex:  @values;
+	-ms-flex:  @values;
+	flex:  @values;
+}
+
+.flex-flow(@v){
+	-webkit-flex-flow: @v;
+	-moz-flex-flow: @v;
+	-ms-flex-flow: @v;
+	-o-flex-flow: @v;
+	flex-flow: @v;
+}
+
+.align-items(@v){
+	justify-content: @v;
+  	align-items: @v;
+}

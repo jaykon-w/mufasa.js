@@ -1,0 +1,82 @@
+
+.menu-lateral {
+	width: 300px;
+	background: @defaultBgColor;
+	display: inline-block;
+	// .position(absolute, @top: 0px, @bottom: 0px);
+	/* overflow: hidden; */
+	box-shadow: fade(@defaultBgColor, 20%) -10px 0px 10px inset;
+
+	/* transform: translateX(-323px); */
+	.-mf-slide-left-transition();
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+	
+	& input[type=text]{
+		width: 100%;
+		box-sizing: border-box;
+		color: @textColor;
+		border: 0px;
+		padding: 10px;
+		background: @defaultBgColor;
+		text-shadow: @textColor 0px 0px 10px;
+	}
+}
+
+
+.-mf-listview-container {
+	& ul {
+		padding: 0px;
+
+		& li {
+			list-style-type: none;
+			border-bottom: fade(@textColor, 10%) solid 1px;
+
+			& a {
+				text-transform: uppercase;
+				padding-left: 15px;
+				line-height: 45px;
+				letter-spacing: 1px;
+				display: block;
+				.flex(1);
+				&:hover, &.active{
+					// text-indent: 15px;
+					background: @defaultBgColor;
+					text-shadow: @textColor 0px 0px 10px;
+					& i{
+						margin-right: 15px;
+					}
+				}
+
+				& i {
+					margin-right: 5px;
+				}
+				
+				&, & i{
+					transition: all 0.3s ease-out;
+				}
+
+				&.active{
+
+					/* &:before{
+						content: " ";
+						width: 0;
+						height: 0;
+						border-top: 22px solid transparent;
+						border-bottom: 22px solid transparent;
+						border-left: 22px solid fade(@defaultBgColor, 78%);
+						position: absolute;
+						left: 300px;
+						
+					} */
+
+					
+				}
+
+			}
+		} 
+	}
+}

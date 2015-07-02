@@ -1,0 +1,11 @@
+<nav class="{{containerCls}}">
+	<ul>
+		{{#if loading}}
+			<p>{{nome}}</p>
+		{{else}}
+			{{#Store .}}
+				<li><i class="fa fa-{{icon}}"></i> <a href="{{href}}" class={{-mf-active-class}}>{{nome}}</a></li>
+			{{/Store}}
+		{{/if}}
+	</ul>
+</nav>

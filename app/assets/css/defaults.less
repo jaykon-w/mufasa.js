@@ -1,0 +1,99 @@
+@textColor: rgba(255, 255, 255, 0.9);
+@defaultBgColor: rgba(0, 0, 0, 0.5);
+
+
+.-mf-text-highlinght{
+	color: @textColor;
+	text-shadow: @textColor 0px 0px 10px, #000 0px -1px;
+}
+
+body {
+	margin: 0px;
+	padding: 0px;
+	color: @textColor;
+	background: url('http://192.185.228.226/projects/sa/1-0-3/img/body/violate.jpg');
+	background-size: cover;
+	background-attachment: fixed;
+	font-family: 'open-sans-light', sans-serif;
+	font-size: 12px;
+	overflow: hidden;
+	.-mf-slide-left-transition();
+	-webkit-transition-property: -webkit-transform;
+	-moz-transition-property: -moz-transform;
+	-ms-transition-property: -ms-transform;
+	-o-transition-property: -o-transform;
+	transition-property: transform;
+}
+
+h1,h2,h3 {
+	display: block;
+	text-align: center;
+	.-mf-text-highlinght();
+	min-height: 1em;
+}
+
+a, a:hover,a:visited,a:active {
+	color: @textColor;
+	text-decoration: none;
+}
+
+*:focus{
+	outline: 0;
+}
+
+.-mf-flex-container{
+	.flex-box()
+}
+
+
+hr {
+	height: 1px;
+	min-height: 1px;
+	background: fade(@textColor, 30%);
+	border: 0;
+	width: 100%;
+}
+
+i.fa {
+	font-size: 1.5em;
+}
+
+.-mf-slide-left-transition{
+	-webkit-transform-origin-x: 0;
+	-moz-transform-origin-x: 0;
+	-ms-transform-origin-x: 0;
+	-o-transform-origin-x: 0;
+	transform-origin-x: 0;
+	transition: all 0.3s ease-out;
+}
+
+.-mf-button {
+	position: relative;
+	padding: 1em;
+	border: 0;
+	margin: 4px;
+	border-radius: 4px;
+	background: transparent;/* linear-gradient(to bottom, rgba(56, 56, 56, 0.5) 0%, rgba(0, 0, 0, 0) 100%) ;*/
+	// box-shadow: @defaultBgColor 0px 0px 1px 2px, fade(@defaultBgColor, 40%) 0px -21px 2px 0px inset;
+	.-mf-text-highlinght();
+	font-weight: bold;
+
+	&:active{
+		// box-shadow: @defaultBgColor 0px 0px 2px 3px, fade(@defaultBgColor, 40%) 0px -21px 2px 0px inset, fade(@defaultBgColor, 30%) 5px 5px 5px 0px inset;
+		// zoom: 0.96;
+	}
+}
+
+.-mf-toolbar-container{
+	background: @defaultBgColor;
+	padding: 3px 7px
+}
+
+.-mf-badge{
+	position: absolute;
+	border-radius: 9px;
+	background: rgba(223, 54, 54, 0.7);
+	padding: 2px 8px;
+	top: 5px;
+	right: 0;
+}

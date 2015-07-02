@@ -1,0 +1,5 @@
+<div id="principal-menu" class="menu-lateral">
+	<h1>{{nomeMenu}}</h1>
+	<div id="search-input"></div>
+	{{Component menuList}}
+</div>
