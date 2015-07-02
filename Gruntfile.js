@@ -74,7 +74,7 @@ module.exports = function( grunt ) {
     watch: {
       dist : {
         files : [
-          'app/assets/js/application.json',
+          'app/assets/application.json',
           'app/assets/js/**/*.coffee',
           'app/assets/css/**/*.less'
         ],
@@ -91,30 +91,38 @@ module.exports = function( grunt ) {
 
   grunt.event.on('watch', function(action, filepath) {
 
-    if (/\.coffee$/.test(filepath) || /application\.json$/.test(filepath)) {
+    var config = JSON.parse(fs.readFileSync(path.join(__dirname, 'app/assets', 'application.json')));
 
-      var config = JSON.parse(fs.readFileSync(path.join(__dirname, 'app/assets/js', 'application.json')));
       
-      var extension = config.destination.substring(config.destination.lastIndexOf("."));
-      config.destinationMin = config.destination.replace(extension, ".min"+extension);
-
+    if (/\.coffee$/.test(filepath) || /application\.json$/.test(filepath)) {
+     
       var configurantionForCompile = {}
-      configurantionForCompile[config.destination] = config.files.map(function(idx){
+      configurantionForCompile[config.destination+"/mufasa.js"] = config.files.map(function(idx){
         return path.join(__dirname, 'app/assets/js', idx);
       })
 
       grunt.config('coffee.compileJoined.files', configurantionForCompile);
-      grunt.config('concat.dist.src', [config.extrasPath+"/**/*.js", config.destination]);
-      grunt.config('concat.dist.dest', config.destination);
+      grunt.config('concat.dist.src', [config.extrasPath+"/**/*.js", config.destination+"/mufasa.js"]);
+      grunt.config('concat.dist.dest', config.destination+"/mufasa.js");
       
-      grunt.config('uglify.my_target.src', config.destination);
-      grunt.config('uglify.my_target.dest', config.destinationMin);
+      grunt.config('uglify.my_target.src', config.destination+"/mufasa.js");
+      grunt.config('uglify.my_target.dest', config.destination+"/mufasa.min.js");
 
 
       grunt.config('watch.dist.tasks', ['coffee','concat','uglify']);
     }
 
     else if(/\.less$/.test(filepath)){
+
+      css = {};
+      cssMin = {};
+
+      css[config.destination+"/mufasa.css"] = "app/assets/css/application.less";
+      cssMin[config.destination+"/mufasa.min.css"] = "app/assets/css/application.less";
+
+      grunt.config('less.development.files', css);
+      grunt.config('less.production.files', cssMin);
+
       grunt.config('watch.dist.tasks', ['less']);
     }
     
