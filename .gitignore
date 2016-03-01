@@ -1,2 +1,4 @@
 node_modules
 app/assets/js/app.coffee
+app/assets/js/**/*.js
+npm-debug.log

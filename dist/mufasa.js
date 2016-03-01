@@ -3954,10 +3954,6 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
 
     __extends(Store, _super);
 
-    Store.prototype.rebuildOnChange = true;
-
-    Store.prototype.storeId = null;
-
 
     /*
        Configuraveis
@@ -3996,11 +3992,22 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
      */
 
     Store.prototype.inialStoreConfig = function(config) {
-      var _ref;
       if (config == null) {
         config = {};
       }
-      _ref = [[], [], [], false, null, false, null], this.store = _ref[0], this.removedRecords = _ref[1], this.updatedRecords = _ref[2], this.loaded = _ref[3], this.loadConfig = _ref[4], this.autoLoad = _ref[5], this.loadNamespace = _ref[6];
+      this.rebuildOnChange = true;
+      this.storeId = null;
+      this.map = {};
+      this.autoCommit = false;
+      this.store = [];
+      this.insertedRecords = [];
+      this.removedRecords = [];
+      this.updatedRecords = [];
+      this.loaded = false;
+      this.loadConfig = null;
+      this.autoLoad = false;
+      this.loadNamespace = null;
+      this._commited = true;
       this.applyConfig(this, config, true);
       return this;
     };
@@ -4039,7 +4046,7 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
           record = new Record(record);
         }
         existentRecord = this.findAt(record.id);
-        if (existentRecord.length === 0) {
+        if (!existentRecord) {
           record.on('change', _onRecordChange.bind(this));
           if ((criterio.after != null) && criterio.after > -1 && criterio.after <= this.store.length - 1) {
             this.store.splice(criterio.after, 0, record);
@@ -4055,8 +4062,14 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
               };
             })(this)
           });
+          this.insertedRecords.push(record);
+          this.map[record.id] = record;
+          this._commited = false;
           if (!oneFire) {
             this.fireEvent('insert', this, this.store, record);
+          }
+          if (this.autoCommit) {
+            this.commit();
           }
         }
       }
@@ -4091,12 +4104,16 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
 
     _onRecordChange = function(rec, prop, oldVal, val) {
       var finded;
-      this.fireEvent('update', this, rec, prop, oldVal, val);
       finded = this.updatedRecords.filter(function(i) {
         return i.id === rec.id;
       });
       if (!finded.length) {
-        return this.updatedRecords.push(rec);
+        this.updatedRecords.push(rec);
+      }
+      this._commited = false;
+      this.fireEvent('update', this, rec, prop, oldVal, val);
+      if (this.autoCommit) {
+        return this.commit();
       }
     };
 
@@ -4117,9 +4134,12 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
     };
 
     Store.prototype.findAt = function(id) {
-      return this.store.filter(function(item) {
-        return item.id === id;
-      });
+
+      /*
+      		@store.filter (item)->
+      			item.id is id
+       */
+      return this.map[id];
     };
 
     Store.prototype.getAt = function(index) {
@@ -4150,6 +4170,7 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
         delete this.store[key];
       }
       this.store = [];
+      this.map = {};
       this.fireEvent('clear', this);
       return this;
     };
@@ -4230,13 +4251,29 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
     Store.prototype.remove = function() {
       var args, rec, recs, _i, _len;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      this.removedRecords = [];
       recs = this.find.apply(this, args);
       for (_i = 0, _len = recs.length; _i < _len; _i++) {
         rec = recs[_i];
-        this.removedRecords.push.apply(this.removedRecords, this.store.splice(this.store.indexOf(rec), 1));
+        this.removedRecords.push.apply(this.removedRecords, this.store.splice(rec.index, 1));
+        delete this.map[rec.id];
       }
+      this._commited = false;
       this.fireEvent(['delete', 'remove'], this, this.store, this.removedRecords);
+      if (this.autoCommit) {
+        this.commit();
+      }
+      return this;
+    };
+
+    Store.prototype.commit = function() {
+      if (!this._commited) {
+
+        /*
+        			TODO: commit das alterações
+         */
+        this.insertedRecords = this.removedRecords = this.updatedRecords = [];
+        this._commited = true;
+      }
       return this;
     };
 
@@ -4387,49 +4424,59 @@ var __module0__ = (function(__dependency1__, __dependency2__, __dependency3__, _
 
     Socket.prototype.bindsForStore = function(store) {
       store.enableReceive = true;
+      store.autoCommit = true;
       if (!events.contains("insert")) {
         this.on("insert", function(data, wrapper, original) {
           store.enableReceive = false;
-          store.add(data);
-          return store.enableReceive = true;
+          data.$$reemitThis = false;
+          return store.add(data);
         });
       }
       if (!events.contains("remove")) {
         this.on("remove", function(data, wrapper, original) {
+          var _ref;
           store.enableReceive = false;
-          store.remove('id', data.id);
-          return store.enableReceive = true;
+          if ((_ref = store.findAt(data.id)) != null) {
+            _ref.data.$$reemitThis = false;
+          }
+          return store.remove('id', data.id);
         });
       }
       if (!events.contains("update")) {
         this.on("update", function(data, wrapper, original) {
-          var _ref;
+          var findedData;
           store.enableReceive = false;
-          if ((_ref = store.findAt(data.id)[0]) != null) {
-            _ref.replace(data);
-          }
-          return store.enableReceive = true;
+          findedData = store.findAt(data.id);
+          data.$$reemitThis = false;
+          return findedData != null ? findedData.replace(data) : void 0;
         });
       }
       store.on("insert", (function(_this) {
         return function(store, collection, record) {
-          if (store.enableReceive) {
-            return _this.emit("insert", record);
+          if (record.data.$$reemitThis !== false) {
+            _this.emit("insert", record);
           }
+          return delete record.data.$$reemitThis;
         };
       })(this));
       store.on("remove", (function(_this) {
         return function(store, collection, record) {
-          if (store.enableReceive) {
-            return _this.emit("remove", record);
+          var _ref;
+          if (record.data == null) {
+            return false;
           }
+          if (((_ref = record.data) != null ? _ref.$$reemitThis : void 0) !== false) {
+            _this.emit("remove", record);
+          }
+          return delete record.$$reemitThis;
         };
       })(this));
       store.on("update", (function(_this) {
-        return function(store, rec, prop, oldVal, val) {
-          if (store.enableReceive) {
-            return _this.emit("update", rec);
+        return function(store, record, prop, oldVal, val) {
+          if (record.data.$$reemitThis !== false) {
+            _this.emit("update", record);
           }
+          return delete record.$$reemitThis;
         };
       })(this));
       return true;

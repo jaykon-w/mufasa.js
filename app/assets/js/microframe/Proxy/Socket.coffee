@@ -54,33 +54,41 @@ class Socket extends BridgeInterface
 	bindsForStore:(store)->
 
 		store.enableReceive = true
+		store.autoCommit = true
 
 		if not events.contains "insert"
 			@on "insert", (data, wrapper, original)->
 				store.enableReceive = false
+				data.$$reemitThis = false
 				store.add data
-				store.enableReceive = true
 		if not events.contains "remove"
 			@on "remove", (data, wrapper, original)->
 				store.enableReceive = false
+
+				store.findAt(data.id)?.data.$$reemitThis = false
 				store.remove 'id', data.id
-				store.enableReceive = true
 		if not events.contains "update"
 			@on "update", (data, wrapper, original)->
 				store.enableReceive = false
-				store.findAt(data.id)[0]?.replace data
-				store.enableReceive = true
+
+				findedData = store.findAt(data.id)
+				data.$$reemitThis = false
+				findedData?.replace data
 		
 
 
 		store.on "insert", (store, collection, record)=>
-			@emit "insert", record if store.enableReceive
+			@emit "insert", record if record.data.$$reemitThis isnt false
+			delete record.data.$$reemitThis
 
 		store.on "remove", (store, collection, record)=>
-			@emit "remove", record if store.enableReceive
+			return false if !record.data?
+			@emit "remove", record if record.data?.$$reemitThis isnt false
+			delete record.$$reemitThis
 
-		store.on "update", (store, rec, prop, oldVal, val)=>
-			@emit "update", rec if store.enableReceive
+		store.on "update", (store, record, prop, oldVal, val)=>
+			@emit "update", record if record.data.$$reemitThis isnt false
+			delete record.$$reemitThis
 
 		true
 		

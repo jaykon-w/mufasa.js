@@ -3,8 +3,7 @@
 ###
 class Store extends Observable
 
-	rebuildOnChange: true
-	storeId: null
+
 
 	###
     Configuraveis
@@ -37,7 +36,25 @@ class Store extends Observable
         @return this
     ###
 	inialStoreConfig:(config={})->
-		[@store,@removedRecords,@updatedRecords,@loaded,@loadConfig,@autoLoad,@loadNamespace] = [[],[],[],false,null,false,null]
+		#[@store,@removedRecords@removedRecords,@updatedRecords,@loaded,@loadConfig,@autoLoad,@loadNamespace] = [[],[],[],false,null,false,null]
+		
+		@rebuildOnChange 	= true
+		@storeId 			= null
+		@map 				= {}
+		@autoCommit 		= false
+		@store 				= []
+		@insertedRecords 	= []
+		@removedRecords 	= []
+		@updatedRecords 	= []
+		@loaded 			= false
+		@loadConfig 		= null
+		@autoLoad 			= false
+		@loadNamespace 		= null
+
+		@_commited 			= true
+
+
+
 
 		@applyConfig @, config, true
 		@
@@ -66,7 +83,7 @@ class Store extends Observable
 			record = new Record(record) if record not instanceof Record 
 			existentRecord = @findAt record.id
 
-			if existentRecord.length == 0
+			if !existentRecord
 
 				record.on 'change', _onRecordChange.bind @
 
@@ -84,7 +101,14 @@ class Store extends Observable
 					get: ()=>
 						@store.indexOf record
 
+
+				@insertedRecords.push record
+				@map[record.id] = record
+				@_commited = false
+
 				@fireEvent 'insert', @, @store, record if !oneFire
+
+				@commit() if @autoCommit
 		
 		@
 
@@ -105,12 +129,16 @@ class Store extends Observable
 		@private
     ###
 	_onRecordChange=(rec, prop, oldVal, val)->
-		@fireEvent 'update', @, rec, prop, oldVal, val
-
 		finded = @updatedRecords.filter (i)->
 			i.id is rec.id
 
 		@updatedRecords.push rec if !finded.length
+
+		@_commited = false
+		
+		@fireEvent 'update', @, rec, prop, oldVal, val
+		
+		@commit() if @autoCommit
 
 
 	###
@@ -126,8 +154,12 @@ class Store extends Observable
 
 	findAt:(id)->
 
+		###
 		@store.filter (item)->
-			item.id is id	
+			item.id is id
+		###	
+
+		@map[id]
 
 	getAt:(index)->
 		@store[index]
@@ -147,6 +179,7 @@ class Store extends Observable
 		for rec, key in @store
 			delete @store[key]
 		@store = []
+		@map = {}
 		@fireEvent 'clear', @
 		@
 		
@@ -211,14 +244,30 @@ class Store extends Observable
     ###
 	remove:(args...)->
 
-		@removedRecords = []
+		#@removedRecords = []
 
 		recs = @find.apply @, args
 
 		for rec in recs
-			@removedRecords.push.apply @removedRecords, @store.splice(@store.indexOf(rec), 1)
-		
+			@removedRecords.push.apply @removedRecords, @store.splice(rec.index, 1)
+			delete @map[rec.id]
+
+		@_commited = false
 		@fireEvent ['delete','remove'], @, @store, @removedRecords
+
+		@commit() if @autoCommit
+		@
+
+
+	commit:()->
+		if !@_commited
+			###
+			TODO: commit das alterações
+			###
+
+			@insertedRecords = @removedRecords = @updatedRecords = []
+			@_commited = true
+
 		@
 
 
